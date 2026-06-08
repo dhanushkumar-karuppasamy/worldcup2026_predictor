@@ -1,0 +1,13 @@
+kaggle
+pandas
+numpy
+scikit-learn
+xgboost
+scipy
+matplotlib
+seaborn
+jupyter
+ipykernel
+python-dotenv
+pyarrow
+kagglehub
