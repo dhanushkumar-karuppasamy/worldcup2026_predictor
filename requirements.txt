@@ -11,3 +11,4 @@ ipykernel
 python-dotenv
 pyarrow
 kagglehub
+joblib

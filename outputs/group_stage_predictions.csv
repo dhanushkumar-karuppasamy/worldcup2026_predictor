@@ -1,0 +1,73 @@
+group,matchday,home,away,p_home_win,p_draw,p_away_win,expected_home_goals,expected_away_goals
+A,1,United States,Panama,48.8%,25.2%,26.1%,1.57,1.08
+A,1,Algeria,New Zealand,65.9%,20.6%,13.5%,1.97,0.76
+A,2,United States,Algeria,34.5%,25.5%,39.9%,1.31,1.43
+A,2,Panama,New Zealand,52.3%,24.6%,23.1%,1.64,1.01
+A,3,United States,New Zealand,62.6%,21.6%,15.8%,1.91,0.83
+A,3,Panama,Algeria,25.0%,23.8%,51.2%,1.13,1.72
+B,1,Argentina,Chile,87.5%,9.0%,3.4%,3.09,0.5
+B,1,Peru,Australia,23.2%,23.8%,53.0%,1.06,1.72
+B,2,Argentina,Peru,86.7%,9.7%,3.5%,2.93,0.46
+B,2,Chile,Australia,23.7%,25.0%,51.3%,1.0,1.6
+B,3,Argentina,Australia,75.1%,16.5%,8.4%,2.28,0.61
+B,3,Chile,Peru,38.4%,27.0%,34.6%,1.29,1.21
+C,1,Mexico,Jamaica,78.8%,14.1%,7.0%,2.53,0.62
+C,1,Venezuela,Ecuador,17.5%,21.8%,60.7%,0.92,1.91
+C,2,Mexico,Venezuela,63.8%,21.0%,15.1%,1.96,0.83
+C,2,Jamaica,Ecuador,8.1%,14.6%,77.3%,0.71,2.56
+C,3,Mexico,Ecuador,39.1%,26.7%,34.2%,1.32,1.22
+C,3,Jamaica,Venezuela,22.8%,23.7%,53.5%,1.05,1.74
+D,1,France,Morocco,45.1%,25.2%,29.7%,1.54,1.2
+D,1,Belgium,Slovakia,78.8%,14.4%,6.9%,2.48,0.59
+D,2,France,Belgium,47.6%,24.5%,27.9%,1.63,1.19
+D,2,Morocco,Slovakia,80.8%,13.1%,6.1%,2.62,0.59
+D,3,France,Slovakia,85.8%,10.0%,4.1%,2.98,0.54
+D,3,Morocco,Belgium,40.6%,25.6%,33.8%,1.43,1.29
+E,1,Germany,South Africa,80.4%,13.4%,6.2%,2.58,0.58
+E,1,Colombia,Ukraine,66.1%,20.1%,13.8%,2.04,0.8
+E,2,Germany,Colombia,46.9%,26.3%,26.8%,1.46,1.03
+E,2,South Africa,Ukraine,30.4%,26.1%,43.5%,1.15,1.43
+E,3,Germany,Ukraine,73.1%,17.5%,9.4%,2.2,0.64
+E,3,South Africa,Colombia,10.7%,17.1%,72.2%,0.77,2.32
+F,1,Portugal,Brazil,39.6%,25.8%,34.7%,1.4,1.3
+F,1,Paraguay,Cameroon,59.3%,22.3%,18.4%,1.87,0.93
+F,2,Portugal,Paraguay,64.1%,21.0%,14.9%,1.96,0.82
+F,2,Brazil,Cameroon,80.6%,13.2%,6.2%,2.61,0.59
+F,3,Portugal,Cameroon,81.8%,12.5%,5.8%,2.7,0.59
+F,3,Brazil,Paraguay,62.6%,21.7%,15.7%,1.89,0.82
+G,1,Spain,Canada,71.7%,17.3%,10.9%,2.3,0.77
+G,1,Uruguay,Egypt,45.6%,24.7%,29.6%,1.59,1.23
+G,2,Spain,Uruguay,71.2%,18.0%,10.8%,2.2,0.72
+G,2,Canada,Egypt,45.7%,25.4%,28.9%,1.52,1.16
+G,3,Spain,Egypt,78.1%,14.2%,7.7%,2.58,0.69
+G,3,Canada,Uruguay,38.5%,26.8%,34.7%,1.3,1.22
+H,1,England,Serbia,76.4%,15.4%,8.1%,2.41,0.65
+H,1,Côte d'Ivoire,Saudi Arabia,56.3%,24.3%,19.4%,1.67,0.87
+H,2,England,Côte d'Ivoire,65.0%,19.8%,15.2%,2.11,0.91
+H,2,Serbia,Saudi Arabia,42.8%,25.7%,31.5%,1.46,1.22
+H,3,England,Saudi Arabia,80.0%,13.5%,6.5%,2.6,0.61
+H,3,Serbia,Côte d'Ivoire,24.8%,22.9%,52.3%,1.19,1.82
+I,1,Netherlands,Nigeria,60.2%,21.9%,17.8%,1.9,0.92
+I,1,South Korea,Norway,38.9%,26.3%,34.8%,1.35,1.26
+I,2,Netherlands,South Korea,50.2%,24.7%,25.1%,1.63,1.07
+I,2,Nigeria,Norway,29.8%,25.9%,44.3%,1.15,1.47
+I,3,Netherlands,Norway,50.7%,24.8%,24.5%,1.62,1.04
+I,3,Nigeria,South Korea,29.2%,25.5%,45.2%,1.16,1.51
+J,1,Japan,Croatia,45.1%,26.0%,28.9%,1.47,1.12
+J,1,Turkey,Czech Republic,48.5%,24.5%,27.0%,1.63,1.15
+J,2,Japan,Turkey,45.8%,25.6%,28.7%,1.51,1.14
+J,2,Croatia,Czech Republic,49.2%,24.1%,26.7%,1.68,1.17
+J,3,Japan,Czech Republic,56.2%,22.9%,20.8%,1.82,1.01
+J,3,Croatia,Turkey,38.8%,25.7%,35.5%,1.39,1.32
+K,1,Italy,Denmark,41.1%,25.8%,33.1%,1.43,1.26
+K,1,Poland,Hungary,34.4%,25.5%,40.1%,1.31,1.44
+K,2,Italy,Poland,57.7%,22.9%,19.4%,1.81,0.95
+K,2,Denmark,Hungary,50.7%,24.4%,24.8%,1.65,1.08
+K,3,Italy,Hungary,53.8%,23.6%,22.6%,1.75,1.05
+K,3,Denmark,Poland,54.6%,23.9%,21.5%,1.71,0.98
+L,1,Switzerland,Iran,35.2%,25.7%,39.1%,1.31,1.4
+L,1,Austria,Venezuela,51.4%,24.6%,23.9%,1.64,1.03
+L,2,Switzerland,Austria,42.6%,25.6%,31.8%,1.47,1.23
+L,2,Iran,Venezuela,59.0%,22.6%,18.4%,1.83,0.91
+L,3,Switzerland,Venezuela,55.9%,23.3%,20.8%,1.77,0.98
+L,3,Iran,Austria,45.7%,25.5%,28.8%,1.52,1.15
