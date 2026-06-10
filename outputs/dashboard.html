@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WC2026 Predictor</title>
+<style>
+  /* ── Design tokens ── */
+  :root {
+    --pitch:     #0a4d2e;
+    --pitch-mid: #0d6b3e;
+    --pitch-line:#1aae6a;
+    --gold:      #c9952a;
+    --gold-pale: #f5e6c0;
+    --ink:       #0f1a14;
+    --ink-mid:   #2d4035;
+    --mist:      #f2f7f4;
+    --border:    #d0e4d8;
+    --away:      #b53a2f;
+    --draw:      #7a6b3e;
+    --font-data: "Courier New", monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: var(--mist);
+    color: var(--ink);
+    line-height: 1.5;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--pitch);
+    color: #fff;
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .header-pitch {
+    /* Simplified pitch lines as CSS */
+    background:
+      /* centre circle */
+      radial-gradient(circle at 50% 100%, transparent 60px, rgba(255,255,255,0.06) 60px, rgba(255,255,255,0.06) 62px, transparent 62px),
+      /* halfway line */
+      linear-gradient(to bottom, transparent 49.5%, rgba(255,255,255,0.06) 49.5%, rgba(255,255,255,0.06) 50.5%, transparent 50.5%),
+      var(--pitch);
+    padding: 2.5rem 2rem 2rem;
+  }
+  .header-inner { max-width: 1100px; margin: 0 auto; }
+  .header-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--pitch-line);
+    margin-bottom: 0.4rem;
+    font-family: var(--font-data);
+  }
+  h1 {
+    font-size: clamp(1.6rem, 4vw, 2.8rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #fff;
+    line-height: 1.1;
+  }
+  h1 span { color: var(--gold); }
+  .header-sub {
+    margin-top: 0.5rem;
+    font-size: 14px;
+    color: rgba(255,255,255,0.6);
+    font-family: var(--font-data);
+  }
+
+  /* ── Champion podium ── */
+  .podium-bar {
+    background: linear-gradient(90deg, var(--pitch-mid), var(--pitch));
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding: 1.2rem 2rem;
+  }
+  .podium-inner { max-width: 1100px; margin: 0 auto; display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center; }
+  .podium-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--pitch-line); font-family: var(--font-data); }
+  .podium-teams { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .podium-item { display: flex; align-items: center; gap: 8px; }
+  .podium-medal { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+  .medal-1 { background: var(--gold); color: #000; }
+  .medal-2 { background: #a8a8b0; color: #000; }
+  .medal-3 { background: #b87333; color: #fff; }
+  .podium-name { color: #fff; font-weight: 600; font-size: 15px; }
+  .podium-pct  { color: var(--gold-pale); font-family: var(--font-data); font-size: 13px; }
+
+  /* ── Main layout ── */
+  main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+  /* ── Tabs ── */
+  .tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 1.5rem; overflow-x: auto; }
+  .tab-btn {
+    padding: 0.7rem 1.4rem;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-mid);
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .tab-btn:hover { color: var(--pitch); }
+  .tab-btn.active { color: var(--pitch); border-bottom-color: var(--pitch-line); font-weight: 700; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── Section title ── */
+  .section-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-mid);
+    font-family: var(--font-data);
+    margin-bottom: 1rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── Champion bar chart ── */
+  .champion-grid { display: grid; gap: 6px; }
+  .bar-row { display: grid; grid-template-columns: 160px 1fr 52px; gap: 10px; align-items: center; }
+  .bar-team { font-size: 13px; font-weight: 500; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar-track { background: var(--border); border-radius: 3px; height: 20px; overflow: hidden; }
+  .bar-fill  { height: 100%; border-radius: 3px; transition: width 0.6s ease; display: flex; align-items: center; }
+  .bar-pct   { font-size: 12px; font-family: var(--font-data); color: var(--ink-mid); font-weight: 600; }
+
+  /* ── Groups grid ── */
+  .groups-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
+  .group-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .group-card-header {
+    background: var(--pitch);
+    color: #fff;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    font-family: var(--font-data);
+  }
+  .group-team-row { display: grid; grid-template-columns: 1fr 44px; align-items: center; padding: 7px 12px; border-bottom: 1px solid var(--mist); gap: 8px; }
+  .group-team-row:last-child { border-bottom: none; }
+  .group-team-name { font-size: 13px; font-weight: 500; }
+  .group-team-name.qualifies { color: var(--pitch); font-weight: 700; }
+  .group-qualify-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .group-qualify-fill { height: 100%; border-radius: 3px; background: var(--pitch-line); }
+  .group-qualify-pct { font-size: 11px; font-family: var(--font-data); color: var(--ink-mid); text-align: right; }
+
+  /* ── Match predictions table ── */
+  .match-filter { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem; }
+  .filter-btn {
+    padding: 4px 12px;
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: var(--font-data);
+    transition: all 0.15s;
+  }
+  .filter-btn.active { background: var(--pitch); color: #fff; border-color: var(--pitch); }
+  .match-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .match-table th { text-align: left; padding: 8px 10px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-mid); border-bottom: 2px solid var(--border); font-family: var(--font-data); }
+  .match-table td { padding: 9px 10px; border-bottom: 1px solid var(--mist); }
+  .match-table tr:hover td { background: var(--mist); }
+  .prob-home { color: var(--pitch); font-weight: 700; font-family: var(--font-data); }
+  .prob-draw { color: var(--draw); font-family: var(--font-data); }
+  .prob-away { color: var(--away); font-weight: 700; font-family: var(--font-data); }
+  .prob-neutral { font-family: var(--font-data); }
+  .xg-tag { font-size: 11px; color: var(--ink-mid); font-family: var(--font-data); }
+  .md-badge { display: inline-block; padding: 1px 6px; border-radius: 3px; background: var(--mist); border: 1px solid var(--border); font-size: 11px; font-family: var(--font-data); }
+
+  /* ── About tab ── */
+  .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  @media (max-width: 600px) { .about-grid { grid-template-columns: 1fr; } }
+  .about-card { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; }
+  .about-card h3 { font-size: 13px; font-weight: 700; margin-bottom: 0.6rem; color: var(--pitch); }
+  .about-card p, .about-card li { font-size: 13px; color: var(--ink-mid); line-height: 1.7; }
+  .about-card ul { padding-left: 1.2rem; }
+  .accuracy-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--mist); font-size: 13px; }
+  .accuracy-val { font-family: var(--font-data); font-weight: 700; color: var(--pitch); }
+
+  /* ── Status bar ── */
+  .status-bar { background: var(--pitch); color: rgba(255,255,255,0.6); text-align: center; padding: 8px; font-size: 11px; font-family: var(--font-data); }
+
+  /* ── Loading / error states ── */
+  .load-msg { text-align: center; padding: 3rem; color: var(--ink-mid); font-family: var(--font-data); font-size: 14px; }
+  .error-msg { color: var(--away); font-size: 13px; font-family: var(--font-data); padding: 1rem; background: #fff5f5; border-radius: 6px; border: 1px solid #f5c6c6; }
+
+  @media (max-width: 600px) {
+    .bar-row { grid-template-columns: 110px 1fr 44px; }
+    .bar-team { font-size: 12px; }
+    h1 { font-size: 1.5rem; }
+    .podium-teams { gap: 0.6rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-pitch">
+    <div class="header-inner">
+      <div class="header-eyebrow">ML Prediction System · Monte Carlo · 10,000 simulations</div>
+      <h1>FIFA World Cup <span>2026</span><br>Predictor</h1>
+      <div class="header-sub" id="header-sub">Loading predictions…</div>
+    </div>
+  </div>
+  <div class="podium-bar">
+    <div class="podium-inner">
+      <span class="podium-label">Most likely champions</span>
+      <div class="podium-teams" id="podium-teams">—</div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('champion')">Champion odds</button>
+    <button class="tab-btn" onclick="showTab('groups')">Group stage</button>
+    <button class="tab-btn" onclick="showTab('matches')">Match predictions</button>
+    <button class="tab-btn" onclick="showTab('about')">About the model</button>
+  </div>
+
+  <!-- TAB: Champion odds -->
+  <div class="tab-panel active" id="tab-champion">
+    <div class="section-title">Champion probability — top 24 teams</div>
+    <div class="champion-grid" id="champion-bars">
+      <div class="load-msg">Loading…</div>
+    </div>
+  </div>
+
+  <!-- TAB: Groups -->
+  <div class="tab-panel" id="tab-groups">
+    <div class="section-title">Group qualification probability — bar = % chance of advancing</div>
+    <div class="groups-grid" id="groups-grid">
+      <div class="load-msg">Loading…</div>
+    </div>
+  </div>
+
+  <!-- TAB: Match predictions -->
+  <div class="tab-panel" id="tab-matches">
+    <div class="section-title">Group stage match predictions</div>
+    <div class="match-filter" id="match-filter"></div>
+    <div id="match-table-wrap">
+      <div class="load-msg">Loading…</div>
+    </div>
+  </div>
+
+  <!-- TAB: About -->
+  <div class="tab-panel" id="tab-about">
+    <div class="section-title">How the model works</div>
+    <div class="about-grid">
+      <div class="about-card">
+        <h3>Model architecture</h3>
+        <ul>
+          <li>Ensemble: XGBoost (40%) + Poisson goals model (60%)</li>
+          <li>Elo ratings built from 49,000+ international matches since 1872</li>
+          <li>Rolling form: last 5 and 10 matches, importance-weighted</li>
+          <li>StatsBomb xG data from 148 World Cup matches</li>
+          <li>Monte Carlo: 10,000 full tournament simulations</li>
+        </ul>
+      </div>
+      <div class="about-card">
+        <h3>Backtest accuracy (leave-one-out, 1994–2022)</h3>
+        <div class="accuracy-row"><span>XGBoost</span><span class="accuracy-val">52.5%</span></div>
+        <div class="accuracy-row"><span>Poisson Goals</span><span class="accuracy-val">55.0%</span></div>
+        <div class="accuracy-row"><span>Ensemble (XGB+Poisson)</span><span class="accuracy-val">~56%</span></div>
+        <div class="accuracy-row"><span>Random baseline</span><span class="accuracy-val">33.3%</span></div>
+      </div>
+      <div class="about-card">
+        <h3>Data sources</h3>
+        <ul>
+          <li>International results 1872–2026 (martj42, Kaggle)</li>
+          <li>FIFA World Cup metadata (abecklas, Kaggle)</li>
+          <li>StatsBomb open data — shot-level xG</li>
+          <li>FIFA rankings (June 2025)</li>
+          <li>2026 qualified teams & group draw (official FIFA)</li>
+        </ul>
+      </div>
+      <div class="about-card">
+        <h3>Limitations</h3>
+        <ul>
+          <li>No player-level data (injuries, suspensions)</li>
+          <li>2026 bracket seeding rules not yet published by FIFA</li>
+          <li>64-match test set — results vary by ~3–5% per run</li>
+          <li>Football is inherently unpredictable — upsets happen</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="status-bar" id="status-bar">Loading data…</div>
+
+<script>
+// ── Tab switching ──────────────────────────────────────────
+function showTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ── CSV parser ────────────────────────────────────────────
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const headers = lines[0].split(',').map(h => h.trim());
+  return lines.slice(1).map(line => {
+    const vals = line.split(',');
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = (vals[i] || '').trim());
+    return obj;
+  });
+}
+
+// ── Colour helpers ────────────────────────────────────────
+function barColor(pct, max) {
+  const ratio = pct / max;
+  if (ratio > 0.7) return '#0a4d2e';
+  if (ratio > 0.4) return '#0d6b3e';
+  if (ratio > 0.2) return '#1aae6a';
+  return '#85c9a4';
+}
+
+function qualColor(pct) {
+  if (pct > 80) return '#0a4d2e';
+  if (pct > 60) return '#1aae6a';
+  if (pct > 40) return '#c9952a';
+  return '#b53a2f';
+}
+
+// ── Load predictions CSV ──────────────────────────────────
+async function loadPredictions() {
+  // Try v2 first, fall back to v1
+  for (const fname of ['wc2026_predictions_v2.csv', 'wc2026_predictions.csv']) {
+    try {
+      const r = await fetch(fname);
+      if (!r.ok) continue;
+      const text = await r.text();
+      return parseCSV(text);
+    } catch(e) { continue; }
+  }
+  return null;
+}
+
+async function loadMatchPredictions() {
+  for (const fname of ['group_stage_predictions_v2.csv', 'group_stage_predictions.csv']) {
+    try {
+      const r = await fetch(fname);
+      if (!r.ok) continue;
+      return parseCSV(await r.text());
+    } catch(e) { continue; }
+  }
+  return null;
+}
+
+// ── Render champion bars ──────────────────────────────────
+function renderChampionBars(data) {
+  const top24  = data.slice(0, 24);
+  const maxPct = parseFloat(top24[0].champion_pct);
+  const wrap   = document.getElementById('champion-bars');
+
+  // Podium
+  const podiumHTML = top24.slice(0, 3).map((d, i) => `
+    <div class="podium-item">
+      <div class="podium-medal medal-${i+1}">${i+1}</div>
+      <span class="podium-name">${d.team}</span>
+      <span class="podium-pct">${parseFloat(d.champion_pct).toFixed(1)}%</span>
+    </div>`).join('');
+  document.getElementById('podium-teams').innerHTML = podiumHTML;
+
+  // Bars
+  wrap.innerHTML = top24.map(d => {
+    const pct  = parseFloat(d.champion_pct);
+    const fill = (pct / maxPct * 100).toFixed(1);
+    return `
+    <div class="bar-row">
+      <div class="bar-team">${d.team}</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${fill}%;background:${barColor(pct,maxPct)}"></div>
+      </div>
+      <div class="bar-pct">${pct.toFixed(1)}%</div>
+    </div>`;
+  }).join('');
+
+  // Header sub
+  document.getElementById('header-sub').textContent =
+    `${data.length} teams · ${new Date().toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'})}`;
+}
+
+// ── Render groups ─────────────────────────────────────────
+function renderGroups(data) {
+  const GROUPS = {
+    A: ["United States","Panama","Algeria","New Zealand"],
+    B: ["Argentina","Chile","Peru","Australia"],
+    C: ["Mexico","Jamaica","Venezuela","Ecuador"],
+    D: ["France","Morocco","Belgium","Slovakia"],
+    E: ["Germany","South Africa","Colombia","Ukraine"],
+    F: ["Portugal","Brazil","Paraguay","Cameroon"],
+    G: ["Spain","Canada","Uruguay","Egypt"],
+    H: ["England","Serbia","Côte d'Ivoire","Saudi Arabia"],
+    I: ["Netherlands","Nigeria","South Korea","Norway"],
+    J: ["Japan","Croatia","Turkey","Czech Republic"],
+    K: ["Italy","Denmark","Poland","Hungary"],
+    L: ["Switzerland","Iran","Austria","Venezuela"]
+  };
+
+  const byTeam = {};
+  data.forEach(d => { byTeam[d.team] = d; });
+
+  const wrap = document.getElementById('groups-grid');
+  wrap.innerHTML = Object.entries(GROUPS).map(([grp, teams]) => {
+    // Sort by qualify_pct desc
+    const sorted = teams
+      .map(t => ({ team: t, q: parseFloat((byTeam[t] || {}).qualified_pct || 0) }))
+      .sort((a, b) => b.q - a.q);
+
+    const rows = sorted.map((t, i) => `
+      <div class="group-team-row">
+        <div>
+          <div class="group-team-name ${i < 2 ? 'qualifies' : ''}">${t.team}</div>
+          <div class="group-qualify-bar" style="margin-top:3px">
+            <div class="group-qualify-fill" style="width:${t.q}%;background:${qualColor(t.q)}"></div>
+          </div>
+        </div>
+        <div class="group-qualify-pct">${t.q.toFixed(0)}%</div>
+      </div>`).join('');
+
+    return `
+      <div class="group-card">
+        <div class="group-card-header">Group ${grp}</div>
+        ${rows}
+      </div>`;
+  }).join('');
+}
+
+// ── Render match predictions ──────────────────────────────
+let allMatches = [];
+let activeGroup = 'All';
+
+function renderMatchTable(matches) {
+  const filtered = activeGroup === 'All' ? matches : matches.filter(m => m.group === activeGroup);
+  const wrap = document.getElementById('match-table-wrap');
+
+  if (!filtered.length) {
+    wrap.innerHTML = '<div class="load-msg">No matches found.</div>';
+    return;
+  }
+
+  const rows = filtered.map(m => {
+    const ph = parseFloat(m.p_home_win);
+    const pd = parseFloat(m.p_draw);
+    const pa = parseFloat(m.p_away_win);
+    const maxP = Math.max(ph, pd, pa);
+    const homeCls = ph === maxP ? 'prob-home' : 'prob-neutral';
+    const drawCls = pd === maxP ? 'prob-draw' : 'prob-neutral';
+    const awayCls = pa === maxP ? 'prob-away' : 'prob-neutral';
+    return `
+      <tr>
+        <td><span class="md-badge">MD${m.matchday}</span></td>
+        <td style="font-weight:600">${m.home}</td>
+        <td>${m.away}</td>
+        <td class="${homeCls}">${m.p_home_win}</td>
+        <td class="${drawCls}">${m.p_draw}</td>
+        <td class="${awayCls}">${m.p_away_win}</td>
+        <td class="xg-tag">${parseFloat(m.expected_home_goals).toFixed(2)} – ${parseFloat(m.expected_away_goals).toFixed(2)}</td>
+      </tr>`;
+  }).join('');
+
+  wrap.innerHTML = `
+    <table class="match-table">
+      <thead><tr>
+        <th>MD</th><th>Home</th><th>Away</th>
+        <th>Home%</th><th>Draw%</th><th>Away%</th><th>xG</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+function renderMatchFilter(matches) {
+  const groups = ['All', ...new Set(matches.map(m => m.group).sort())];
+  const wrap   = document.getElementById('match-filter');
+  wrap.innerHTML = groups.map(g => `
+    <button class="filter-btn ${g === 'All' ? 'active' : ''}"
+            onclick="filterGroup('${g}', this)">${g === 'All' ? 'All groups' : 'Group ' + g}</button>
+  `).join('');
+}
+
+function filterGroup(grp, btn) {
+  activeGroup = grp;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMatchTable(allMatches);
+}
+
+// ── Bootstrap ─────────────────────────────────────────────
+async function init() {
+  document.getElementById('status-bar').textContent = 'Loading prediction data…';
+
+  const [predictions, matches] = await Promise.all([
+    loadPredictions(),
+    loadMatchPredictions()
+  ]);
+
+  if (!predictions) {
+    const errHTML = `<div class="error-msg">
+      ⚠ Could not load predictions CSV.<br>
+      Make sure you open this file from the <code>outputs/</code> folder after running
+      <code>python scripts/predict_2026_v2.py</code>
+    </div>`;
+    document.getElementById('champion-bars').innerHTML = errHTML;
+    document.getElementById('groups-grid').innerHTML   = errHTML;
+    document.getElementById('status-bar').textContent  = 'Error: prediction data not found';
+    return;
+  }
+
+  renderChampionBars(predictions);
+  renderGroups(predictions);
+
+  if (matches) {
+    allMatches = matches;
+    renderMatchFilter(matches);
+    renderMatchTable(matches);
+  } else {
+    document.getElementById('match-table-wrap').innerHTML =
+      '<div class="load-msg">Run predict_2026_v2.py to generate match predictions.</div>';
+  }
+
+  const updated = new Date().toLocaleString('en-GB');
+  document.getElementById('status-bar').textContent =
+    `WC2026 Predictor · Ensemble model (XGBoost + Poisson) · ${predictions.length} teams · Last updated ${updated}`;
+}
+
+init();
+</script>
+</body>
+</html>

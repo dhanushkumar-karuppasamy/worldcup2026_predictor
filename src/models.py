@@ -99,6 +99,13 @@ class WCXGBoost:
         self.le.fit(LABELS)
         self.classes_ = np.array(LABELS)
 
+    def _align_features(self, X):
+        """Match prediction input to the feature set seen during fit."""
+        if isinstance(X, pd.DataFrame) and hasattr(self.imputer, "feature_names_in_"):
+            cols = list(self.imputer.feature_names_in_)
+            X = X.reindex(columns=cols)
+        return X
+
     def fit(self, X, y, X_val=None, y_val=None):
         X_imp = self.imputer.fit_transform(X)
         y_enc = self.le.transform(y)
@@ -113,10 +120,12 @@ class WCXGBoost:
         return self
 
     def predict(self, X):
+        X = self._align_features(X)
         X_imp = self.imputer.transform(X)
         return self.le.inverse_transform(self.model.predict(X_imp))
 
     def predict_proba(self, X):
+        X = self._align_features(X)
         X_imp = self.imputer.transform(X)
         return self.model.predict_proba(X_imp)
 
